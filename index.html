@@ -18,6 +18,7 @@
       <a href="#stay">住宿</a>
       <a href="#budget">預算</a>
       <a href="#tips">旅遊資訊</a>
+      <a href="#planner">行程記錄</a>
     </nav>
   </header>
 
@@ -56,7 +57,7 @@
       </div>
       <p class="empty" id="empty" hidden>找不到符合的景點，換個關鍵字試試。</p>
       <div class="grid" id="attractionGrid"></div>
-      <p class="note">＊熱門博物館（安妮之家、梵谷、國家博物館）多為指定時段入場，請先在官網線上訂票。</p>
+      <p class="note">＊熱門博物館（安妮之家、梵谷、國家博物館）多為指定時段入場，請先在官網線上訂票。營業時間與休館日可能因節日、特展調整，出發前請以官網公告為準。</p>
     </section>
 
     <section class="section alt" id="nearby">
@@ -174,6 +175,38 @@
         <button class="btn primary" type="submit">訂閱</button>
       </form>
       <p class="form-msg" id="formMsg" role="status"></p>
+    </section>
+
+    <section class="section planner" id="planner">
+      <div class="section-head">
+        <h2>我的行程記錄</h2>
+        <p>選好景點與日期，寫下備註，排進你的阿姆斯特丹計畫。</p>
+      </div>
+      <form class="plan-form" id="planForm" novalidate>
+        <label class="field">
+          <span>景點</span>
+          <input type="text" id="planPlace" list="placeList" maxlength="40" autocomplete="off"
+                 placeholder="輸入關鍵字，從清單選擇景點" required>
+          <datalist id="placeList"></datalist>
+        </label>
+        <label class="field">
+          <span>日期</span>
+          <div class="date-row">
+            <input type="date" id="planDate" required>
+            <output class="weekday" id="planWeekday" for="planDate">—</output>
+          </div>
+        </label>
+        <label class="field wide">
+          <span>備註</span>
+          <textarea id="planNote" rows="3" maxlength="200" placeholder="例如：已訂 10:00 場次、記得帶護照…"></textarea>
+          <small class="count" id="noteCount">0 / 200</small>
+        </label>
+        <div class="form-actions wide">
+          <button class="btn primary" type="submit">加入清單</button>
+          <p class="form-msg" id="planMsg" role="status"></p>
+        </div>
+      </form>
+      <ul class="plan-list" id="planList" aria-label="已加入的行程記錄"></ul>
     </section>
   </main>
 

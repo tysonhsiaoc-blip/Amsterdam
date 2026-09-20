@@ -2,21 +2,27 @@
 // cat: museum 博物館 / history 歷史街區 / canal 運河水岸 / nature 公園綠地 / free 免費
 const attractions = [
   { name: "國家博物館 Rijksmuseum", emoji: "🖼️", cat: ["museum"], price: "約 €25", time: "3 小時",
+    hours: "每日 09:00–17:00", closed: "全年開放，少數節日可能調整",
     desc: "荷蘭最大藝術與歷史博物館，收藏林布蘭〈夜巡〉與維梅爾〈倒牛奶的女僕〉，建築本身也值得細看。",
     bg: "linear-gradient(135deg,#c9a66b,#7a5a2b)" },
   { name: "梵谷博物館 Van Gogh Museum", emoji: "🌻", cat: ["museum"], price: "約 €22", time: "2 小時",
+    hours: "每日約 09:00–17:00（部分時段週五延長）", closed: "全年開放，少數節日可能調整",
     desc: "全球最完整的梵谷收藏，從早期暗沉畫風到〈向日葵〉、〈杏花〉，依創作歷程一路看下來。",
     bg: "linear-gradient(135deg,#f4c542,#c47f0a)" },
   { name: "安妮之家 Anne Frank House", emoji: "📖", cat: ["museum", "history"], price: "約 €16", time: "1–1.5 小時",
+    hours: "每日約 09:00–19:00（夏季延長至 22:00）", closed: "少數猶太節日與國定假日，依官網公告",
     desc: "安妮日記的藏身之處，以真實空間見證二戰歷史。需提前線上訂票，不接受現場購票。",
     bg: "linear-gradient(135deg,#8a9bb0,#3b4a5e)" },
   { name: "阿姆斯特丹市立博物館 Stedelijk", emoji: "🎨", cat: ["museum"], price: "約 €22", time: "2 小時",
+    hours: "每日 10:00–18:00（週五延長至 22:00）", closed: "無固定休館日，聖誕節、元旦等節日可能調整",
     desc: "現代與當代藝術、設計的重鎮，蒙德里安、馬列維奇等大師作品齊全，就在博物館廣場旁。",
     bg: "linear-gradient(135deg,#ef6f6c,#b23a48)" },
   { name: "林布蘭之家 Museum Het Rembrandthuis", emoji: "🖌️", cat: ["museum", "history"], price: "約 €17", time: "1.5 小時",
+    hours: "每日 10:00–17:00", closed: "聖誕節（12/25）、元旦等少數節日",
     desc: "林布蘭生活與作畫近 20 年的故居，重現 17 世紀畫室與蝕刻版畫工藝。",
     bg: "linear-gradient(135deg,#b08968,#6f4e37)" },
   { name: "Moco 現代藝術館", emoji: "🎭", cat: ["museum"], price: "約 €24", time: "1.5 小時",
+    hours: "每日約 09:00–18:00（週末可能延長）", closed: "全年開放，展覽換檔期間可能調整",
     desc: "以 Banksy、Kusama 等街頭與當代藝術為主，展間現代好拍，是博物館廣場的人氣景點。",
     bg: "linear-gradient(135deg,#9d4edd,#5a189a)" },
   { name: "運河環線 UNESCO 世界遺產", emoji: "🚤", cat: ["canal", "history"], price: "船遊約 €18", time: "1–1.5 小時",
@@ -138,6 +144,10 @@ function cardHTML(a, withFav) {
           <span class="tag">⏱ ${a.time}</span>
           ${a.from ? `<span class="tag from">${a.from}</span>` : ""}
         </div>
+        ${a.hours ? `<ul class="hours">
+          <li><span>🕘 營業</span>${a.hours}</li>
+          <li><span>🚫 休館</span>${a.closed}</li>
+        </ul>` : ""}
       </div>
     </article>`;
 }
@@ -263,6 +273,160 @@ $("#subscribeForm").addEventListener("submit", e => {
   msg.textContent = ok ? "訂閱成功！我們會把私房路線寄給你 ✈️" : "請輸入有效的 Email 位址";
   if (ok) e.target.reset();
 });
+
+/* Planner */
+const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const placeNames = [...attractions, ...nearby].map(a => a.name);
+const esc = s => s.replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+// 以 yyyy-mm-dd 拆解後用本地時間建立日期，避免時區造成差一天
+function parseDate(v) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(v);
+  return m ? { month: +m[2], day: +m[3], weekday: WEEKDAYS[new Date(+m[1], +m[2] - 1, +m[3]).getDay()] } : null;
+}
+
+/* Supabase（專案 Test0920）：以 REST API 存取 public.trip_plans。
+   publishable key 可公開；資料由 RLS 依 x-client-id 限制只能讀寫自己的紀錄。 */
+const SUPABASE_URL = "https://vvvurdkfppuxuxobmgyl.supabase.co";
+const SUPABASE_KEY = "sb_publishable_2SR5eGRk7X5xFZZjAyf9RA_ZddH4Ejo";
+
+// 每個瀏覽器一組隨機 ID（非登入機制：清除瀏覽器資料或換裝置就看不到原本的紀錄）
+function getClientId() {
+  try {
+    let id = localStorage.getItem("ams-client-id");
+    if (!id) {
+      id = crypto.randomUUID();
+      localStorage.setItem("ams-client-id", id);
+    }
+    return id;
+  } catch (e) {
+    return crypto.randomUUID();
+  }
+}
+const clientId = getClientId();
+
+async function api(path, options = {}) {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
+    ...options,
+    headers: {
+      apikey: SUPABASE_KEY,
+      "x-client-id": clientId,
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  });
+  if (!res.ok) throw new Error(`Supabase ${res.status}: ${await res.text()}`);
+  return res.status === 204 ? null : res.json();
+}
+
+let plans = [];
+let plansState = "loading"; // loading | ready | error
+
+async function loadPlans() {
+  try {
+    plans = await api("trip_plans?select=id,place,plan_date,note&order=plan_date.asc,created_at.asc");
+    plansState = "ready";
+  } catch (e) {
+    console.error(e);
+    plansState = "error";
+  }
+  renderPlans();
+}
+
+function renderPlans() {
+  const list = $("#planList");
+  if (plansState === "loading") {
+    list.innerHTML = `<li class="plan-empty">載入中…</li>`;
+    return;
+  }
+  if (plansState === "error") {
+    list.innerHTML = `<li class="plan-empty">無法連線到資料庫，請稍後重新整理頁面。</li>`;
+    return;
+  }
+  if (!plans.length) {
+    list.innerHTML = `<li class="plan-empty">還沒有記錄，先從上方加入第一個景點吧。</li>`;
+    return;
+  }
+  list.innerHTML = plans.map(p => {
+    const d = parseDate(p.plan_date);
+    return `
+    <li class="plan-item" data-id="${p.id}">
+      <div class="plan-date"><b>${d.month}/${d.day}</b><span>${d.weekday}</span></div>
+      <div><h3>${esc(p.place)}</h3>${p.note ? `<p>${esc(p.note)}</p>` : ""}</div>
+      <button class="plan-del" type="button" aria-label="刪除 ${esc(p.place)}">刪除</button>
+    </li>`;
+  }).join("");
+}
+
+function updateWeekday() {
+  const d = parseDate($("#planDate").value);
+  const out = $("#planWeekday");
+  out.textContent = d ? `${d.month}月${d.day}日 ${d.weekday}` : "—";
+  out.classList.toggle("set", !!d);
+}
+
+$("#placeList").innerHTML = placeNames.map(n => `<option value="${esc(n)}"></option>`).join("");
+$("#planDate").addEventListener("input", updateWeekday);
+$("#planNote").addEventListener("input", e => {
+  $("#noteCount").textContent = `${e.target.value.length} / 200`;
+});
+
+$("#planForm").addEventListener("submit", async e => {
+  e.preventDefault();
+  const form = e.target;
+  const place = $("#planPlace").value.trim();
+  const date = $("#planDate").value;
+  const note = $("#planNote").value.trim();
+  const msg = $("#planMsg");
+  const submitBtn = $("button[type=submit]", form);
+  const fail = text => { msg.className = "form-msg err"; msg.textContent = text; };
+  if (!placeNames.includes(place)) return fail("景點須從清單中選擇，請輸入關鍵字後點選建議項目");
+  if (!parseDate(date)) return fail("請選擇日期");
+
+  submitBtn.disabled = true;
+  try {
+    const [row] = await api("trip_plans?select=id,place,plan_date,note", {
+      method: "POST",
+      headers: { Prefer: "return=representation" },
+      body: JSON.stringify({ client_id: clientId, place, plan_date: date, note }),
+    });
+    plans.push(row);
+    plans.sort((a, b) => a.plan_date.localeCompare(b.plan_date));
+    plansState = "ready";
+    renderPlans();
+    form.reset();
+    updateWeekday();
+    $("#noteCount").textContent = "0 / 200";
+    msg.className = "form-msg ok";
+    msg.textContent = "已儲存到資料庫 ✓";
+  } catch (err) {
+    console.error(err);
+    fail("儲存失敗，請稍後再試");
+  } finally {
+    submitBtn.disabled = false;
+  }
+});
+
+$("#planList").addEventListener("click", async e => {
+  const btn = e.target.closest(".plan-del");
+  if (!btn) return;
+  const id = btn.closest(".plan-item").dataset.id;
+  btn.disabled = true;
+  try {
+    await api(`trip_plans?id=eq.${encodeURIComponent(id)}`, { method: "DELETE", headers: { Prefer: "return=minimal" } });
+    plans = plans.filter(p => p.id !== id);
+    renderPlans();
+  } catch (err) {
+    console.error(err);
+    btn.disabled = false;
+    const msg = $("#planMsg");
+    msg.className = "form-msg err";
+    msg.textContent = "刪除失敗，請稍後再試";
+  }
+});
+
+renderPlans();
+loadPlans();
 
 renderAttractions();
 renderNearby();
