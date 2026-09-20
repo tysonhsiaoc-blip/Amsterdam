@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>阿姆斯特丹漫遊 | 城市旅遊指南</title>
+  <meta name="description" content="阿姆斯特丹旅遊指南：博物館與必訪景點、風車村等週邊一日遊、荷蘭美食類型、住宿區域與預算試算。">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="site-header" id="top">
+    <a class="logo" href="#top">阿姆斯特丹<span>漫遊</span></a>
+    <button class="menu-btn" aria-label="開啟選單" aria-expanded="false">☰</button>
+    <nav class="nav" id="nav">
+      <a href="#attractions">景點</a>
+      <a href="#nearby">週邊</a>
+      <a href="#food">美食</a>
+      <a href="#stay">住宿</a>
+      <a href="#budget">預算</a>
+      <a href="#tips">旅遊資訊</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="hero-content">
+        <p class="eyebrow">Amsterdam · Netherlands</p>
+        <h1>沿著運河，<br>走進荷蘭黃金時代</h1>
+        <p class="lead">世界級博物館、165 條運河、一日可達的風車與花田——阿姆斯特丹小而精，騎車或步行就能玩透。</p>
+        <div class="hero-actions">
+          <a class="btn primary" href="#attractions">探索景點</a>
+          <a class="btn ghost" href="#nearby">週邊一日遊</a>
+        </div>
+      </div>
+      <ul class="hero-stats">
+        <li><strong>165</strong><span>條運河</span></li>
+        <li><strong>1,200+</strong><span>座橋</span></li>
+        <li><strong>約 85 萬</strong><span>輛自行車</span></li>
+      </ul>
+    </section>
+
+    <section class="section" id="attractions">
+      <div class="section-head">
+        <h2>必訪景點與博物館</h2>
+        <p>依興趣篩選，找到屬於你的阿姆斯特丹。</p>
+      </div>
+      <div class="filters" role="group" aria-label="景點分類">
+        <button class="chip active" data-filter="all">全部</button>
+        <button class="chip" data-filter="museum">博物館</button>
+        <button class="chip" data-filter="history">歷史街區</button>
+        <button class="chip" data-filter="canal">運河水岸</button>
+        <button class="chip" data-filter="nature">公園綠地</button>
+        <button class="chip" data-filter="free">免費參觀</button>
+        <button class="chip" data-filter="fav">♥ 我的收藏 <span id="favCount">0</span></button>
+        <input type="search" id="search" class="search" placeholder="搜尋景點…" aria-label="搜尋景點">
+      </div>
+      <p class="empty" id="empty" hidden>找不到符合的景點，換個關鍵字試試。</p>
+      <div class="grid" id="attractionGrid"></div>
+      <p class="note">＊熱門博物館（安妮之家、梵谷、國家博物館）多為指定時段入場，請先在官網線上訂票。</p>
+    </section>
+
+    <section class="section alt" id="nearby">
+      <div class="section-head">
+        <h2>週邊景點</h2>
+        <p>從阿姆斯特丹中央車站出發，一天來回的風車、花田與小鎮。</p>
+      </div>
+      <div class="grid" id="nearbyGrid"></div>
+    </section>
+
+    <section class="section" id="food">
+      <div class="section-head">
+        <h2>當地美食類型</h2>
+        <p>不必追名店，先認識這幾種店，就知道該吃什麼。</p>
+      </div>
+      <div class="food-grid" id="foodGrid"></div>
+    </section>
+
+    <section class="section alt" id="stay">
+      <div class="section-head">
+        <h2>住哪裡最方便？</h2>
+        <p>阿姆斯特丹不大，選對區域，走路加電車就能到大部分景點。</p>
+      </div>
+      <div class="stay-grid" id="stayGrid"></div>
+      <p class="note">＊市中心住宿偏貴且旺季易客滿，建議提前訂房；另需加收約 12.5% 的城市住宿稅（依房價計，依飯店標示為準）。</p>
+    </section>
+
+    <section class="section" id="budget">
+      <div class="section-head">
+        <h2>預算試算</h2>
+        <p>拖曳調整天數與人數，快速估出旅費（單位：歐元）。</p>
+      </div>
+      <div class="budget">
+        <div class="budget-controls">
+          <label><span>旅遊天數：<strong id="daysVal">3</strong> 天</span>
+            <input type="range" id="days" min="1" max="10" value="3">
+          </label>
+          <label><span>旅客人數：<strong id="peopleVal">2</strong> 人</span>
+            <input type="range" id="people" min="1" max="8" value="2">
+          </label>
+          <label>住宿等級
+            <select id="stayLevel">
+              <option value="55" data-unit="person">青年旅舍／床位（約 €55／人／晚）</option>
+              <option value="150" data-unit="room" selected>經濟型飯店（約 €150／房／晚）</option>
+              <option value="250" data-unit="room">舒適型飯店（約 €250／房／晚）</option>
+              <option value="420" data-unit="room">精品／五星（約 €420／房／晚）</option>
+            </select>
+          </label>
+          <label>飲食風格
+            <select id="foodLevel">
+              <option value="35">街頭小吃為主（約 €35／人／天）</option>
+              <option value="65" selected>小吃＋餐廳（約 €65／人／天）</option>
+              <option value="110">餐廳為主（約 €110／人／天）</option>
+            </select>
+          </label>
+          <label>景點與交通（每人每天）
+            <select id="actLevel">
+              <option value="30">輕鬆玩（約 €30）</option>
+              <option value="55" selected>標準：1–2 間博物館（約 €55）</option>
+              <option value="90">豐富：含週邊一日遊（約 €90）</option>
+            </select>
+          </label>
+        </div>
+        <div class="budget-result">
+          <h3>預估總費用</h3>
+          <div class="total" id="total">€0</div>
+          <ul class="breakdown">
+            <li><span>住宿</span><b id="bStay">0</b></li>
+            <li><span>飲食</span><b id="bFood">0</b></li>
+            <li><span>景點與交通</span><b id="bAct">0</b></li>
+          </ul>
+          <p class="per" id="perPerson"></p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section alt" id="tips">
+      <div class="section-head">
+        <h2>旅遊資訊</h2>
+        <p>出發前，先看這幾件事。</p>
+      </div>
+      <div class="tips-grid">
+        <details class="tip" open>
+          <summary>🚆 交通怎麼搭？</summary>
+          <p>史基浦機場搭火車到中央車站約 15–20 分鐘。市區有電車、地鐵與渡輪，可直接用感應式信用卡／手機支付上下車刷卡（OVpay），不必另買票卡。市中心景點多半步行可達。</p>
+        </details>
+        <details class="tip">
+          <summary>🚲 騎自行車要注意</summary>
+          <p>自行車道（多為紅色鋪面）車速快，行人請勿站在車道上，過馬路先看左右。新手建議先步行與搭電車；租車務必上兩道鎖，避免車輛被偷或掉進運河。</p>
+        </details>
+        <details class="tip">
+          <summary>🎟️ 門票與預約</summary>
+          <p>安妮之家、梵谷博物館、國家博物館等熱門景點採線上時段預約，旺季常提前數週售罄。也可考慮 I amsterdam City Card，含多數博物館與大眾運輸，去 3 間以上博物館較划算。</p>
+        </details>
+        <details class="tip">
+          <summary>💳 付款與小費</summary>
+          <p>幾乎全面支援刷卡與行動支付，部分店家只收卡不收現金。餐廳已含服務費，習慣把帳單湊整或多給 5–10% 作為小費，非強制。</p>
+        </details>
+        <details class="tip">
+          <summary>🌧️ 天氣與裝備</summary>
+          <p>全年多雨多風，一件防風防水外套比雨傘更實用；石板路與橋階較多，穿好走的鞋。荷蘭語為官方語言，但英語普及，溝通幾乎無礙。</p>
+        </details>
+        <details class="tip">
+          <summary>🙏 禮儀與規範</summary>
+          <p>紅燈區禁止拍攝櫥窗與從業人員，並請尊重居民生活、避免喧嘩。市區部分區域禁止公開吸菸，大麻僅限在合法的咖啡店（coffeeshop）內購買，不可帶出國或攜帶過境。</p>
+        </details>
+      </div>
+    </section>
+
+    <section class="cta">
+      <h2>準備好出發了嗎？</h2>
+      <p>訂閱旅遊電子報，每月收到一則阿姆斯特丹私房路線。</p>
+      <form class="subscribe" id="subscribeForm" novalidate>
+        <input type="email" id="email" placeholder="輸入你的 Email" aria-label="Email" required>
+        <button class="btn primary" type="submit">訂閱</button>
+      </form>
+      <p class="form-msg" id="formMsg" role="status"></p>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <p>© 2026 阿姆斯特丹漫遊 · 票價與開放時間僅供參考，出發前請至各官網確認。</p>
+    <a href="#top">回到頂端 ↑</a>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
